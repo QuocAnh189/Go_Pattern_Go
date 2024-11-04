@@ -1,4 +1,4 @@
-package database
+package singleton
 
 import (
 	"fmt"
@@ -24,4 +24,33 @@ func GetDatabaseInstance(connectionString string) *Database {
 		instance = &Database{connectionString: connectionString}
 	})
 	return instance
+}
+
+
+func main() {
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		db := GetDatabaseInstance("DB_CONNECTION_STRING")
+		db.Query("SELECT * FROM users")
+	}()
+
+	go func() {
+		defer wg.Done()
+		db := GetDatabaseInstance("DB_CONNECTION_STRING")
+		db.Query("SELECT * FROM orders")
+	}()
+
+	wg.Wait()
+
+	db1 := GetDatabaseInstance("DB_CONNECTION_STRING")
+	db2 := GetDatabaseInstance("DB_CONNECTION_STRING")
+
+	if db1 == db2 {
+		fmt.Println("Only one instance of Database exists.")
+	} else {
+		fmt.Println("Different instances exist, something went wrong!")
+	}
 }
